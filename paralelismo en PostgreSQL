@@ -1,0 +1,83 @@
+-- Equipos
+INSERT INTO Equipos (nombre, ciudad)
+SELECT 'Equipo ' || i, 'Ciudad ' || i
+FROM generate_series(1, 10) AS i;
+
+-- Jugadores
+INSERT INTO Jugadores (nombre, posicion, id_equipo)
+SELECT 
+    'Jugador ' || i,
+    'Posicion ' || i,
+    (random() * 9)::int + 1
+FROM generate_series(1, 100) AS i;
+
+-- Estadisticas (1 MILLÓN)
+INSERT INTO Estadisticas (id_jugador, hits, carreras, jonrones)
+SELECT 
+    (random() * 99)::int + 1,
+    (random() * 5)::int,
+    (random() * 3)::int,
+    (random() * 2)::int
+FROM generate_series(1, 1000000);
+
+-- Activar paralelismo
+SET max_parallel_workers_per_gather = 4;
+SET parallel_setup_cost = 0;
+SET parallel_tuple_cost = 0;
+
+-- Consulta paralela
+EXPLAIN ANALYZE
+SELECT SUM(hits) FROM Estadisticas;
+
+-- funcion
+CREATE OR REPLACE FUNCTION total_hits_jugador(jugador_id INT)
+RETURNS INT AS $$
+DECLARE
+    total INT;
+BEGIN
+    SELECT SUM(hits) INTO total
+    FROM Estadisticas
+    WHERE id_jugador = jugador_id;
+
+    RETURN total;
+END;
+$$ LANGUAGE plpgsql;
+
+-- procedimiento
+CREATE OR REPLACE PROCEDURE actualizar_tabla_posiciones()
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE Tabla_Posiciones tp
+    SET juegos_ganados = sub.ganados,
+        juegos_perdidos = sub.perdidos
+    FROM (
+        SELECT 
+            equipo_local AS id_equipo,
+            COUNT(*) FILTER (WHERE carreras_local > carreras_visitante) AS ganados,
+            COUNT(*) FILTER (WHERE carreras_local < carreras_visitante) AS perdidos
+        FROM Partidos
+        GROUP BY equipo_local
+    ) sub
+    WHERE tp.id_equipo = sub.id_equipo;
+END;
+$$;
+
+-- Función del trigger
+CREATE OR REPLACE FUNCTION actualizar_estadisticas()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE Estadisticas
+    SET hits = hits + 1
+    WHERE id_jugador = NEW.id_jugador;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger
+CREATE TRIGGER trigger_actualizar_hits
+AFTER INSERT ON Jugadores
+FOR EACH ROW
+EXECUTE FUNCTION actualizar_estadisticas();
+
