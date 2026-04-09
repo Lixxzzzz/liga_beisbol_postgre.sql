@@ -1,0 +1,57 @@
+--paralelismo
+SET max_parallel_workers_per_gather = 4;
+SET parallel_setup_cost = 0;
+SET parallel_tuple_cost = 0;
+EXPLAIN ANALYZE
+SELECT SUM(hits) FROM Estadisticas;
+
+--Funcion
+CREATE OR REPLACE FUNCTION total_hits_jugador(jugador_id INT)
+RETURNS INT AS $$
+DECLARE total INT;
+BEGIN
+    SELECT SUM(hits) INTO total
+    FROM Estadisticas
+    WHERE id_jugador = jugador_id;
+
+    RETURN total;
+END;
+$$ LANGUAGE plpgsql;
+
+--Probamos
+SELECT total_hits_jugador(1);
+
+--Procedimiento
+CREATE OR REPLACE PROCEDURE actualizar_tabla_posiciones()
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE Tabla_Posiciones
+    SET juegos_ganados = 1,
+        juegos_perdidos = 0;
+END;
+$$;
+
+--Ejecuto
+CALL actualizar_tabla_posiciones();
+SELECT * FROM Tabla_Posiciones;
+ --Trigger
+ CREATE OR REPLACE FUNCTION actualizar_estadisticas()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE Estadisticas
+    SET hits = hits + 1
+    WHERE id_jugador = NEW.id_jugador;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_hits
+AFTER INSERT ON Jugadores
+FOR EACH ROW
+EXECUTE FUNCTION actualizar_estadisticas();
+
+--Ejecutamos
+INSERT INTO Jugadores (nombre, posicion, id_equipo)
+VALUES ('Jugador Test', 'Pitcher', 1);
