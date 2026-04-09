@@ -19,6 +19,36 @@ CREATE TABLE Tabla_Posiciones (
     juegos_perdidos INT DEFAULT 0,
     FOREIGN KEY (id_equipo) REFERENCES Equipos(id_equipo)
 );
+-- INSERTAMOS LOS EQUIPOS
+
+INSERT INTO Equipos (nombre, ciudad) VALUES
+('Fuerza del Caribe',   'Santiago'),
+('Criolla del Diamante',     'Santo Domingo'),
+('Los Tigres del Barrio',   'San Pedro de Macorís'),
+('Guerreros del Béisbol',    'La Vega');
+
+
+INSERT INTO Jugadores (nombre, posicion, id_equipo) VALUES
+-- Tigres del Norte (id_equipo = 1)
+('Carlos Martínez',  'Pitcher',       1),
+('Luis Rodríguez',   'Catcher',       1),
+('Pedro Sánchez',    'Primera Base',  1),
+('Miguel Torres',    'Shortstop',     1),
+-- Leones del Sur (id_equipo = 2)
+('José Pérez',       'Pitcher',       2),
+('Ramón Díaz',       'Catcher',       2),
+('Andrés Gómez',     'Segunda Base',  2),
+('Felipe Vargas',    'Outfielder',    2),
+-- Águilas del Este (id_equipo = 3)
+('Roberto Núñez',    'Pitcher',       3),
+('Samuel Cruz',      'Catcher',       3),
+('Diego Herrera',    'Tercera Base',  3),
+('Marcos Reyes',     'Outfielder',    3),
+-- Toros del Oeste (id_equipo = 4)
+('Alejandro Mora',   'Pitcher',       4),
+('Cristian López',   'Catcher',       4),
+('Iván Castillo',    'Primera Base',  4),
+('Nelson Jiménez',   'Shortstop',     4);
 
 -- CONFIGURAR postgres_fdw
 CREATE EXTENSION postgres_fdw;
