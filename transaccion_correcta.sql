@@ -1,8 +1,8 @@
---TRANSACCION --
 BEGIN;
 
     INSERT INTO Partidos (fecha, equipo_local, equipo_visitante, carreras_local, carreras_visitante)
-    VALUES ('2025-04-01', 1, 2, 7, 3);
+    VALUES ('2026-04-01', 1, 2, 7, 3);
+-- SE HACE UNA ACTUALIZACION DE CADA TABLA, POR ESO NO SE INSERTARON DATOS EN LAS TABLAS (ESTADISTICAS, TABLA_POSICIONES) DIRECTAMENTE. DICHOS DATOS SE INSERTAN MEDIANTE LAS TRANSACCION.
 
     UPDATE Estadisticas
     SET hits = hits + 2,
